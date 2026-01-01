@@ -1,1 +1,12 @@
+pandas
+numpy
+requests
+python-dateutil
+scikit-learn
+joblib
+streamlit
+plotly
+feedparser
+nltk
+vaderSentiment
 
