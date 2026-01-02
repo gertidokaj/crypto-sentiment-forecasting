@@ -33,11 +33,18 @@ jobs:
           python live_pipeline/build_live_features.py
           python live_pipeline/predict_live.py
 
-      - name: Commit updated live data
+            - name: Commit updated live data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           mkdir -p data/live
-          git add -A data/live
-          git commit -m "Hourly live update" || echo "No changes"
+
+          # add ONLY live folder (force add even if parent is ignored)
+          git add -f data/live
+
+          # commit only if there is something staged
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Hourly live update"
           git push
+  
