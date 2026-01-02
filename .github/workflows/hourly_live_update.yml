@@ -30,20 +30,18 @@ jobs:
 
       - name: Run live pipeline
         run: |
-          python live_pipeline/fetch_market.py
-          python live_pipeline/fetch_news_rss.py
-          python live_pipeline/build_live_features.py
-          python live_pipeline/predict_live.py
+          python -m live_pipeline.fetch_market
+          python -m live_pipeline.fetch_news_rss
+          python -m live_pipeline.build_live_features
+          python -m live_pipeline.predict_live
 
-      - name: Commit updated live data
+
+          - name: Commit updated live data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-
-          # Only add the live outputs (NOT the whole data folder)
-          git add data/live/*.csv data/live/.gitkeep || true
-
-          git status
+          mkdir -p data/live
+          git add data/live
           git commit -m "Hourly live update" || echo "No changes to commit"
-          git pull --rebase
           git push
+
