@@ -156,3 +156,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Ignore all models by default
+models/*
+
+# ...but allow the final deployed model artefacts
+!models/final_regression_model.pkl
+!models/final_regression_model.json
