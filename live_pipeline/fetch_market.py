@@ -24,10 +24,50 @@ SOURCE_NAME = "coingecko"
 
 def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
     """
-    Implement using your chosen API.
-    For now we intentionally raise so the pipeline writes empty-but-valid outputs.
+    Uses CoinGecko public API (no key required).
+    Returns dict keyed by your symbols: BTC/ETH/BNB
     """
-    raise NotImplementedError("Implement fetch_prices() with your market data provider.")
+    import requests
+
+    # Map your symbols to CoinGecko IDs
+    id_map = {
+        "BTC": "bitcoin",
+        "ETH": "ethereum",
+        "BNB": "binancecoin",
+    }
+
+    ids = ",".join(id_map[c] for c in cryptos if c in id_map)
+
+    url = "https://api.coingecko.com/api/v3/simple/price"
+    params = {
+        "ids": ids,
+        "vs_currencies": "usd",
+        "include_market_cap": "true",
+        "include_24hr_vol": "true",
+        "include_24hr_change": "true",
+        "include_last_updated_at": "true",
+    }
+
+    r = requests.get(url, params=params, timeout=30)
+    r.raise_for_status()
+    data = r.json()
+
+    out: Dict[str, Dict] = {}
+    for sym in cryptos:
+        cg_id = id_map.get(sym)
+        rec = data.get(cg_id, {}) if cg_id else {}
+
+        out[sym] = {
+            "price_usd": rec.get("usd"),
+            "mktcap_usd": rec.get("usd_market_cap"),
+            "volume_24h_usd": rec.get("usd_24h_vol"),
+            "pct_change_24h": rec.get("usd_24h_change"),
+            # CoinGecko simple endpoint doesn't provide 1h change reliably
+            "pct_change_1h": None,
+        }
+
+    return out
+
 
 
 def build_market_latest(run_ts: str) -> pd.DataFrame:

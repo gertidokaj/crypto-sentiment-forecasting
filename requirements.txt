@@ -9,4 +9,5 @@ plotly
 feedparser
 nltk
 vaderSentiment
+requests
 
