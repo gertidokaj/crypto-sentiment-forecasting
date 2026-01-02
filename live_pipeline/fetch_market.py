@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 import json
-from datetime import datetime, timezone
 from typing import Dict, List
 
 import pandas as pd
@@ -19,17 +18,15 @@ REQUIRED_COLS = [
     "source", "fetched_at_utc",
 ]
 
-CRYPTO_LIST = ["BTC", "ETH", "BNB"]  # single standard across the project
-SOURCE_NAME = "coingecko"           # or your source name
+CRYPTO_LIST = ["BTC", "ETH", "BNB"]
+SOURCE_NAME = "coingecko"
 
 
 def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
     """
-    Return dict: { 'BTC': {'price_usd':..., 'mktcap_usd':..., ...}, ... }
-    Implement using your chosen API. Keep it resilient.
+    Implement using your chosen API.
+    For now we intentionally raise so the pipeline writes empty-but-valid outputs.
     """
-    # TODO: replace with real API calls.
-    # For now raise if not implemented.
     raise NotImplementedError("Implement fetch_prices() with your market data provider.")
 
 
@@ -38,10 +35,9 @@ def build_market_latest(run_ts: str) -> pd.DataFrame:
 
     try:
         raw = fetch_prices(CRYPTO_LIST)
-    except Exception as e:
-        # If API fails, write empty-but-valid file (schema-safe)
-        df = pd.DataFrame(columns=REQUIRED_COLS)
-        return df
+    except Exception:
+        # Always return schema-valid df
+        return pd.DataFrame(columns=REQUIRED_COLS)
 
     rows = []
     for c in CRYPTO_LIST:
@@ -64,9 +60,7 @@ def build_market_latest(run_ts: str) -> pd.DataFrame:
     for col in REQUIRED_COLS:
         if col not in df.columns:
             df[col] = pd.NA
-    df = df[REQUIRED_COLS]
-
-    return df
+    return df[REQUIRED_COLS]
 
 
 def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.DataFrame:
@@ -75,7 +69,6 @@ def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.Data
     else:
         hist = pd.DataFrame(columns=REQUIRED_COLS)
 
-    # Align columns
     for col in REQUIRED_COLS:
         if col not in hist.columns:
             hist[col] = pd.NA
@@ -86,10 +79,7 @@ def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.Data
     hist = hist[REQUIRED_COLS]
 
     out = pd.concat([hist, latest_df], ignore_index=True)
-
-    # Optional: drop duplicates (same ts_utc+crypto)
     out = out.drop_duplicates(subset=["ts_utc", "crypto"], keep="last")
-
     return out
 
 
@@ -109,5 +99,17 @@ def main():
     history = append_market_history(latest, history_path)
     atomic_write_csv(history, history_path)
 
-    # Minimal status (optional here; can be done in workflow runner)
-status_path = os.path.join(LIVE_DIR, "status.json")
+    # Status (must be inside main)
+    status_path = os.path.join(LIVE_DIR, "status.json")
+    status = {
+        "ts_utc": run_ts,
+        "market_latest_rows": int(len(latest)),
+        "market_history_rows": int(len(history)),
+        "updated_at_utc": utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+    with open(status_path, "w", encoding="utf-8") as f:
+        json.dump(status, f, indent=2)
+
+
+if __name__ == "__main__":
+    main()
