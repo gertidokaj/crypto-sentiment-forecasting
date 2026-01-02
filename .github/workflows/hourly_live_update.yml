@@ -31,10 +31,12 @@ jobs:
           python live_pipeline/predict_live.py
 
       - name: Commit updated live data
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add data/live
-          git commit -m "Hourly live update" || echo "No changes"
-          git push
+  run: |
+    git config user.name "github-actions"
+    git config user.email "github-actions@github.com"
+    mkdir -p data/live
+    git add data/live
+    git commit -m "Hourly live update" || echo "No changes"
+    git push
+
 
