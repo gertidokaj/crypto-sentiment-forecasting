@@ -3,23 +3,25 @@ name: Hourly Live Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 * * * *"   # every hour at minute 0 (UTC)
 
-# Prevent overlapping runs (recommended)
 concurrency:
   group: hourly-live-update
   cancel-in-progress: true
+
+permissions:
+  contents: write
 
 jobs:
   run-live-pipeline:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,6 +33,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Ensure live output folder exists
+        run: |
+          mkdir -p data/live
+
       - name: Run live pipeline
         run: |
           python -m live_pipeline.fetch_market
@@ -38,24 +44,17 @@ jobs:
           python -m live_pipeline.build_live_features
           python -m live_pipeline.predict_live
 
-        - name: Upload live outputs (artifact)
-        uses: actions/upload-artifact@v4
-        with:
-          name: live-data
-          path: data/live/*.csv
-          if-no-files-found: warn
-
-
-      - name: Commit updated live data
+      - name: Commit updated live data (only if changed)
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          # only stage the allowed live folder
-          git add data/live || true
+          git add data/live
 
-          # commit only if there are changes
-          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Hourly live update"
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
 
-          # push back to main
+          git commit -m "Hourly live update"
           git push
