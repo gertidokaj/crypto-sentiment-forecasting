@@ -1,9 +1,9 @@
 name: Hourly Live Update
 
 on:
-  schedule:
-    - cron: "0 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"   # every hour
 
 permissions:
   contents: write
@@ -12,13 +12,16 @@ jobs:
   run-live-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -37,9 +40,10 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          mkdir -p data/live
-          git add -f data/live
+          # Only add the live outputs (NOT the whole data folder)
+          git add data/live/*.csv data/live/.gitkeep || true
 
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "Hourly live update"
+          git status
+          git commit -m "Hourly live update" || echo "No changes to commit"
+          git pull --rebase
           git push
