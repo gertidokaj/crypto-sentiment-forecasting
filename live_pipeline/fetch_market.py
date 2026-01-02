@@ -73,14 +73,17 @@ def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
 def build_market_latest(run_ts: str) -> pd.DataFrame:
     fetched_at = utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
-    try:
-        raw = fetch_prices(CRYPTO_LIST)
-  
     except Exception as e:
-        print("ERROR in fetch_prices():", repr(e))
-        df = pd.DataFrame(columns=REQUIRED_COLS)
-        df.attrs["market_error"] = repr(e)
-        return df
+    err = f"{type(e).__name__}: {e}"
+    print("ERROR in fetch_prices():", err)
+
+    # Persist the error so it gets committed and you can read it on GitHub
+    ensure_dir(LIVE_DIR)
+    with open(os.path.join(LIVE_DIR, "market_error.txt"), "w", encoding="utf-8") as f:
+        f.write(err)
+
+    return pd.DataFrame(columns=REQUIRED_COLS)
+
 
 
 

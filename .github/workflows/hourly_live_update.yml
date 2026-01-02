@@ -44,6 +44,17 @@ jobs:
           python -m live_pipeline.build_live_features
           python -m live_pipeline.predict_live
 
+      - name: Fail if market is empty
+        run: |
+          python - << 'PY'
+          import pandas as pd
+          df = pd.read_csv("data/live/market_latest.csv")
+          print("market_latest rows:", len(df))
+          if len(df) == 0:
+              raise SystemExit("market_latest.csv is empty — market fetch failed")
+          PY
+
+
       - name: Debug live outputs
         run: |
           echo "== data/live contents =="
