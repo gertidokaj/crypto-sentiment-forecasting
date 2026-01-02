@@ -1,35 +1,105 @@
+# live_pipeline/build_live_features.py
+from __future__ import annotations
 
 import os
 import pandas as pd
 
+from .utils_io import ensure_dir, atomic_write_csv, utc_now, floor_to_hour_utc
+
+LIVE_DIR = os.path.join("data", "live")
+
+MARKET_COLS = ["ts_utc", "crypto", "price_usd"]
+FEATURE_COLS = [
+    "ts_utc", "crypto",
+    "price_usd",
+    "return_1h",
+    "return_24h",
+    "ma_3", "ma_6", "ma_24",
+    "vol_6", "vol_24",
+]
+
+def _empty_features() -> pd.DataFrame:
+    return pd.DataFrame(columns=FEATURE_COLS)
+
 def main():
-    base = os.path.join("data", "live")
+    ensure_dir(LIVE_DIR)
 
-    market_latest = os.path.join(base, "market_latest.csv")
-    news_latest = os.path.join(base, "news_latest.csv")
+    run_ts = floor_to_hour_utc(utc_now()).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
-    m = pd.read_csv(market_latest)
-    n = pd.read_csv(news_latest)
+    history_path = os.path.join(LIVE_DIR, "market_history.csv")
+    latest_path = os.path.join(LIVE_DIR, "market_latest.csv")
+    out_path = os.path.join(LIVE_DIR, "features_latest.csv")
 
-    # Aggregate news sentiment per crypto for the current run timestamp
-    if not n.empty:
-        sent = (n.groupby(["ts_utc","crypto"], as_index=False)
-                  .agg(news_count=("link","count"),
-                       news_sent_mean=("sentiment_compound","mean"),
-                       news_sent_std=("sentiment_compound","std")))
+    # Always ensure latest exists; if not, create empty features and exit safely
+    if not os.path.exists(latest_path):
+        atomic_write_csv(_empty_features(), out_path)
+        return
+
+    latest = pd.read_csv(latest_path)
+
+    # Enforce required columns
+    for c in MARKET_COLS:
+        if c not in latest.columns:
+            latest[c] = pd.NA
+
+    latest = latest[MARKET_COLS].copy()
+
+    # Load history if available; otherwise initialize with latest
+    if os.path.exists(history_path):
+        hist = pd.read_csv(history_path)
     else:
-        sent = pd.DataFrame(columns=["ts_utc","crypto","news_count","news_sent_mean","news_sent_std"])
+        hist = latest.copy()
 
-    feat = pd.merge(m, sent, on=["ts_utc","crypto"], how="left")
+    for c in MARKET_COLS:
+        if c not in hist.columns:
+            hist[c] = pd.NA
+    hist = hist[MARKET_COLS].copy()
 
-    # fill missing news values
-    feat["news_count"] = feat["news_count"].fillna(0).astype(int)
-    feat["news_sent_mean"] = feat["news_sent_mean"].fillna(0.0)
-    feat["news_sent_std"] = feat["news_sent_std"].fillna(0.0)
+    # Parse timestamps
+    hist["ts_utc"] = pd.to_datetime(hist["ts_utc"], errors="coerce", utc=True)
+    latest["ts_utc"] = pd.to_datetime(latest["ts_utc"], errors="coerce", utc=True)
 
-    out = os.path.join(base, "live_features.csv")
-    feat.to_csv(out, index=False)
-    print("Saved live_features.csv")
+    # Drop rows with missing keys
+    hist = hist.dropna(subset=["ts_utc", "crypto", "price_usd"])
+    latest = latest.dropna(subset=["ts_utc", "crypto", "price_usd"])
 
-if __name__ == "__main__":
-    main()
+    if latest.empty:
+        atomic_write_csv(_empty_features(), out_path)
+        return
+
+    # Compute rolling features per crypto
+    feats = []
+    for crypto, g in hist.sort_values("ts_utc").groupby("crypto"):
+        g = g.copy()
+        g["price_usd"] = pd.to_numeric(g["price_usd"], errors="coerce")
+
+        g["return_1h"] = g["price_usd"].pct_change(1)
+        g["return_24h"] = g["price_usd"].pct_change(24)
+
+        g["ma_3"] = g["price_usd"].rolling(3).mean()
+        g["ma_6"] = g["price_usd"].rolling(6).mean()
+        g["ma_24"] = g["price_usd"].rolling(24).mean()
+
+        g["vol_6"] = g["return_1h"].rolling(6).std()
+        g["vol_24"] = g["return_1h"].rolling(24).std()
+
+        # Take the row matching this run hour (latest timestamp for this crypto)
+        target_ts = latest.loc[latest["crypto"] == crypto, "ts_utc"].max()
+        if pd.isna(target_ts):
+            continue
+
+        row = g.loc[g["ts_utc"] == target_ts, ["ts_utc", "crypto", "price_usd",
+                                              "return_1h", "return_24h",
+                                              "ma_3", "ma_6", "ma_24",
+                                              "vol_6", "vol_24"]]
+        if row.empty:
+            # If history didn't contain that exact hour, take last available row <= target_ts
+            row = g.loc[g["ts_utc"] <= target_ts].tail(1)[["ts_utc", "crypto", "price_usd",
+                                                          "return_1h", "return_24h",
+                                                          "ma_3", "ma_6", "ma_24",
+                                                          "vol_6", "vol_24"]]
+        if not row.empty:
+            feats.append(row)
+
+    if feats:
+        out = pd.concat(feats, ignore_inde_
