@@ -75,9 +75,15 @@ def build_market_latest(run_ts: str) -> pd.DataFrame:
 
     try:
         raw = fetch_prices(CRYPTO_LIST)
-    except Exception:
-        # Always return schema-valid df
-        return pd.DataFrame(columns=REQUIRED_COLS)
+  
+    except Exception as e:
+        print("ERROR in fetch_prices():", repr(e))
+        df = pd.DataFrame(columns=REQUIRED_COLS)
+        df.attrs["market_error"] = repr(e)
+        return df
+
+
+
 
     rows = []
     for c in CRYPTO_LIST:
@@ -130,6 +136,8 @@ def main():
     run_ts = run_dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     latest = build_market_latest(run_ts)
+    market_error = getattr(latest, "attrs", {}).get("market_error")
+
 
     latest_path = os.path.join(LIVE_DIR, "market_latest.csv")
     history_path = os.path.join(LIVE_DIR, "market_history.csv")
