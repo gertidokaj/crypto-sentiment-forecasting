@@ -110,4 +110,4 @@ def main():
     atomic_write_csv(history, history_path)
 
     # Minimal status (optional here; can be done in workflow runner)
-    status_path = os.path.join(LIVE_DIR, "status.jso
+status_path = os.path.join(LIVE_DIR, "status.json")
