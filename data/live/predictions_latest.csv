@@ -1,4 +1,4 @@
 ts_utc,crypto,yhat,yhat_type,model_name,generated_at_utc,note
-2026-01-02T17:00:00Z,BNB,,return_1h,none,2026-01-02T17:49:27Z,Model not found in models/final_regression_model.pkl
-2026-01-02T17:00:00Z,BTC,,return_1h,none,2026-01-02T17:49:27Z,Model not found in models/final_regression_model.pkl
-2026-01-02T17:00:00Z,ETH,,return_1h,none,2026-01-02T17:49:27Z,Model not found in models/final_regression_model.pkl
+2026-01-02T18:00:00Z,BNB,,return_1h,none,2026-01-02T18:29:54Z,Model not found in models/final_regression_model.pkl
+2026-01-02T18:00:00Z,BTC,,return_1h,none,2026-01-02T18:29:54Z,Model not found in models/final_regression_model.pkl
+2026-01-02T18:00:00Z,ETH,,return_1h,none,2026-01-02T18:29:54Z,Model not found in models/final_regression_model.pkl
