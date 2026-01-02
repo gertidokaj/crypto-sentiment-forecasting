@@ -216,9 +216,9 @@ marimo/_lsp/
 __marimo__/
 
 # Ignore all data by default
-data/**
+data/
 
-# But keep live outputs tracked (needed for GitHub Actions + Streamlit)
+# ...but allow the live outputs (small files) to be committed
 !data/live/
 !data/live/**
-!data/README.md
+!data/live/.gitkeep
