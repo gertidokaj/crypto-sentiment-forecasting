@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import os
 import json
+import traceback
 from typing import Dict, List
+from datetime import datetime, timezone
 
 import pandas as pd
 
@@ -18,18 +20,18 @@ REQUIRED_COLS = [
     "source", "fetched_at_utc",
 ]
 
-CRYPTO_LIST = ["BTC", "ETH", "BNB"]
+CRYPTO_LIST = ["BTC", "ETH", "BNB"]     # keep consistent everywhere
 SOURCE_NAME = "coingecko"
 
 
 def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
     """
-    Uses CoinGecko public API (no key required).
-    Returns dict keyed by your symbols: BTC/ETH/BNB
+    Fetch prices from CoinGecko (public endpoint, no key).
+    Returns dict keyed by symbols: BTC/ETH/BNB.
     """
+    import time
     import requests
 
-    # Map your symbols to CoinGecko IDs
     id_map = {
         "BTC": "bitcoin",
         "ETH": "ethereum",
@@ -45,12 +47,31 @@ def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
         "include_market_cap": "true",
         "include_24hr_vol": "true",
         "include_24hr_change": "true",
-        "include_last_updated_at": "true",
     }
 
-    r = requests.get(url, params=params, timeout=30)
-    r.raise_for_status()
-    data = r.json()
+    headers = {"User-Agent": "crypto-sentiment-forecasting/1.0"}
+
+    last_exc = None
+    data = None
+
+    for attempt in range(3):
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=30)
+
+            # Some GitHub runners get rate-limited; retry a few times
+            if r.status_code in (403, 429):
+                time.sleep(2 * (attempt + 1))
+                continue
+
+            r.raise_for_status()
+            data = r.json()
+            break
+        except Exception as e:
+            last_exc = e
+            time.sleep(2 * (attempt + 1))
+
+    if data is None:
+        raise RuntimeError(f"CoinGecko request failed after retries: {last_exc}")
 
     out: Dict[str, Dict] = {}
     for sym in cryptos:
@@ -62,31 +83,28 @@ def fetch_prices(cryptos: List[str]) -> Dict[str, Dict]:
             "mktcap_usd": rec.get("usd_market_cap"),
             "volume_24h_usd": rec.get("usd_24h_vol"),
             "pct_change_24h": rec.get("usd_24h_change"),
-            # CoinGecko simple endpoint doesn't provide 1h change reliably
+            # Simple endpoint usually doesn't provide 1h change reliably
             "pct_change_1h": None,
         }
 
     return out
 
 
-
 def build_market_latest(run_ts: str) -> pd.DataFrame:
     fetched_at = utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
+    try:
+        raw = fetch_prices(CRYPTO_LIST)
     except Exception as e:
-    err = f"{type(e).__name__}: {e}"
-    print("ERROR in fetch_prices():", err)
+        err = f"{type(e).__name__}: {e}\n\n{traceback.format_exc()}"
+        print("ERROR in fetch_prices():", err)
 
-    # Persist the error so it gets committed and you can read it on GitHub
-    ensure_dir(LIVE_DIR)
-    with open(os.path.join(LIVE_DIR, "market_error.txt"), "w", encoding="utf-8") as f:
-        f.write(err)
+        ensure_dir(LIVE_DIR)
+        with open(os.path.join(LIVE_DIR, "market_error.txt"), "w", encoding="utf-8") as f:
+            f.write(err)
 
-    return pd.DataFrame(columns=REQUIRED_COLS)
-
-
-
-
+        # Return empty-but-schema-correct dataframe
+        return pd.DataFrame(columns=REQUIRED_COLS)
 
     rows = []
     for c in CRYPTO_LIST:
@@ -105,11 +123,13 @@ def build_market_latest(run_ts: str) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
 
-    # Enforce schema + order
+    # Enforce schema and order
     for col in REQUIRED_COLS:
         if col not in df.columns:
             df[col] = pd.NA
-    return df[REQUIRED_COLS]
+    df = df[REQUIRED_COLS]
+
+    return df
 
 
 def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.DataFrame:
@@ -118,6 +138,7 @@ def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.Data
     else:
         hist = pd.DataFrame(columns=REQUIRED_COLS)
 
+    # Align columns
     for col in REQUIRED_COLS:
         if col not in hist.columns:
             hist[col] = pd.NA
@@ -128,7 +149,10 @@ def append_market_history(latest_df: pd.DataFrame, history_path: str) -> pd.Data
     hist = hist[REQUIRED_COLS]
 
     out = pd.concat([hist, latest_df], ignore_index=True)
+
+    # Optional: drop duplicates (same ts_utc+crypto)
     out = out.drop_duplicates(subset=["ts_utc", "crypto"], keep="last")
+
     return out
 
 
@@ -139,8 +163,6 @@ def main():
     run_ts = run_dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     latest = build_market_latest(run_ts)
-    market_error = getattr(latest, "attrs", {}).get("market_error")
-
 
     latest_path = os.path.join(LIVE_DIR, "market_latest.csv")
     history_path = os.path.join(LIVE_DIR, "market_history.csv")
@@ -150,7 +172,15 @@ def main():
     history = append_market_history(latest, history_path)
     atomic_write_csv(history, history_path)
 
-    # Status (must be inside main)
+    # ALWAYS write a debug file so we can see what happened in CI
+    debug_path = os.path.join(LIVE_DIR, "market_debug.txt")
+    with open(debug_path, "w", encoding="utf-8") as f:
+        f.write(f"run_ts={run_ts}\n")
+        f.write(f"latest_rows={len(latest)}\n")
+        f.write(f"history_rows={len(history)}\n")
+        f.write(f"latest_cols={list(latest.columns)}\n")
+
+    # Status file
     status_path = os.path.join(LIVE_DIR, "status.json")
     status = {
         "ts_utc": run_ts,
@@ -158,8 +188,28 @@ def main():
         "market_history_rows": int(len(history)),
         "updated_at_utc": utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
-    with open(status_path, "w", encoding="utf-8") as f:
-        json.dump(status, f, indent=2)
+    atomic_write_json(status, status_path)
+
+    print("Saved market_latest.csv, market_history.csv, market_debug.txt, status.json")
+
+
+def atomic_write_json(obj: dict, path: str) -> None:
+    # Small helper to avoid partial writes
+    import tempfile
+    d = os.path.dirname(path)
+    ensure_dir(d)
+    fd, tmp_path = tempfile.mkstemp(prefix=".tmp_", suffix=".json", dir=d)
+    os.close(fd)
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(obj, f, indent=2)
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":
