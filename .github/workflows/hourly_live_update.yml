@@ -3,7 +3,7 @@ name: Hourly Live Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"   # every hour at minute 0 (UTC)
+    - cron: "0 * * * *"
 
 concurrency:
   group: hourly-live-update
@@ -44,6 +44,17 @@ jobs:
           python -m live_pipeline.build_live_features
           python -m live_pipeline.predict_live
 
+      - name: Debug live outputs
+        run: |
+          echo "== data/live contents =="
+          ls -lah data/live || true
+          echo "== market_latest head =="
+          head -n 5 data/live/market_latest.csv || true
+          echo "== features_latest head =="
+          head -n 5 data/live/features_latest.csv || true
+          echo "== predictions_latest head =="
+          head -n 5 data/live/predictions_latest.csv || true
+
       - name: Commit updated live data (only if changed)
         run: |
           git config user.name "github-actions"
@@ -57,4 +68,5 @@ jobs:
           fi
 
           git commit -m "Hourly live update"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
