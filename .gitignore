@@ -1,56 +1,65 @@
-# -----------------------------
-# Project-specific ignores
-# -----------------------------
+# =====================================================
+# PROJECT-SPECIFIC RULES (MOST IMPORTANT)
+# =====================================================
 
-# Ignore all data by default
-data/
+# Ignore ALL data by default
+data/*
 
-# Ignore trained models by default
-models/
-
-# Ignore generated files everywhere by default
-*.csv
-*.json
-
-# Secrets / local env
-.env
-
-# Jupyter / Colab
-.ipynb_checkpoints/
-content/drive/
-
-# -----------------------------
-# EXCEPTIONS (must be AFTER the ignores above)
-# Track ONLY the live dashboard outputs
-# -----------------------------
-
+# Allow ONLY the live pipeline outputs (written by GitHub Actions)
 !data/live/
 !data/live/**
 
-# Allow live output file types despite global ignores
-!data/live/*.csv
-!data/live/*.json
-
-# Keep the folder in git even when empty
+# Keep the folder even if empty
 !data/live/.gitkeep
 
 
-# -----------------------------
-# Standard Python.gitignore
-# -----------------------------
+# -----------------------------------------------------
+# Ignore ALL models by default
+# -----------------------------------------------------
+models/*
 
+# Allow ONLY the deployed inference models
+!models/.gitkeep
+!models/final_regression_model.pkl
+!models/final_regression_model.json
+!models/best_regression_model.pkl
+!models/best_regression_model.json
+
+
+# -----------------------------------------------------
+# Ignore generated files everywhere by default
+# (EXCEPT data/live which is already whitelisted)
+# -----------------------------------------------------
+*.csv
+*.json
+
+
+# =====================================================
+# ENV / SECRETS
+# =====================================================
+.env
+.envrc
+
+
+# =====================================================
+# JUPYTER / COLAB
+# =====================================================
+.ipynb_checkpoints/
+content/drive/
+
+
+# =====================================================
+# PYTHON (standard)
+# =====================================================
 __pycache__/
 *.py[codz]
 *$py.class
 
-*.so
-
 .Python
 build/
-develop-eggs/
 dist/
 downloads/
-eggs/
+.eggs/
 .eggs/
 lib/
 lib64/
@@ -64,9 +73,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-*.manifest
-*.spec
-
 pip-log.txt
 pip-delete-this-directory.txt
 
@@ -74,15 +80,11 @@ htmlcov/
 .tox/
 .nox/
 .coverage
-.coverage.*
-.cache
-nosetests.xml
 coverage.xml
 *.cover
 *.py.cover
 .hypothesis/
 .pytest_cache/
-cover/
 
 *.mo
 *.pot
@@ -94,60 +96,31 @@ db.sqlite3-journal
 
 instance/
 .webassets-cache
-
 .scrapy
-
 docs/_build/
-
 .pybuilder/
 target/
 
-.ipynb_checkpoints
-
 profile_default/
 ipython_config.py
-
-.pdm-python
-.pdm-build/
-.pixi
 
 __pypackages__/
 
 celerybeat-schedule
 celerybeat.pid
 
-*.sage.py
-
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 .spyderproject
 .spyproject
-
 .ropeproject
 
 /site
-
 .mypy_cache/
 .dmypy.json
-dmypy.json
-
-.pyre/
-
+pyre/
 .pytype/
-
 cython_debug/
 
-.abstra/
-
 .ruff_cache/
-
 .pypirc
 
 .cursorignore
@@ -157,9 +130,10 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Ignore all models by default
-models/*
-
-# ...but allow the final deployed model artefacts
-!models/final_regression_model.pkl
-!models/final_regression_model.json
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
