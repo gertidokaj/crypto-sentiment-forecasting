@@ -2,80 +2,88 @@
 from __future__ import annotations
 
 import os
+import time
 import joblib
 import pandas as pd
+import numpy as np
 
-from .utils_io import atomic_write_csv, utc_now
-
-LIVE_DIR = os.path.join("data", "live")
 MODEL_PATH = os.path.join("models", "final_regression_model.pkl")
 
-FEATURES_FALLBACK = ["price_usd", "return_1h", "ma_6", "vol_24"]  # safe defaults
-
-
 def main():
-    feat_path = os.path.join(LIVE_DIR, "features_latest.csv")
-    out_path = os.path.join(LIVE_DIR, "predictions_latest.csv")
+    base = os.path.join("data", "live")
+    feat_path = os.path.join(base, "features_latest.csv")
+    out_path = os.path.join(base, "predictions_latest.csv")
 
     if not os.path.exists(feat_path):
-        # schema-safe fallback
-        out = pd.DataFrame(columns=["ts_utc", "crypto", "yhat", "yhat_type", "model_name", "generated_at_utc", "note"])
-        atomic_write_csv(out, out_path)
-        print("features_latest.csv not found; wrote empty predictions_latest.csv")
-        return
+        raise FileNotFoundError(f"Missing {feat_path}. Run build_live_features first.")
 
     df = pd.read_csv(feat_path)
 
-    # Ensure keys exist
+    # Ensure minimal id columns exist
     for c in ["ts_utc", "crypto"]:
         if c not in df.columns:
-            df[c] = pd.NA
-
-    if df.empty:
-        out = pd.DataFrame(columns=["ts_utc", "crypto", "yhat", "yhat_type", "model_name", "generated_at_utc", "note"])
-        atomic_write_csv(out, out_path)
-        print("features_latest.csv empty; wrote empty predictions_latest.csv")
-        return
-
-    generated_at = utc_now().replace(microsecond=0).isoformat().replace("+00:00", "Z")
+            df[c] = ""
 
     if not os.path.exists(MODEL_PATH):
         out = df[["ts_utc", "crypto"]].copy()
-        out["yhat"] = pd.NA
+        out["yhat"] = np.nan
         out["yhat_type"] = "return_1h"
         out["model_name"] = "none"
-        out["generated_at_utc"] = generated_at
-        out["note"] = "Model not found in models/final_regression_model.pkl"
-        atomic_write_csv(out, out_path)
-        print("Model not found; wrote predictions_latest.csv (no model)")
+        out["generated_at_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        out["note"] = f"Model not found in {MODEL_PATH}"
+        out.to_csv(out_path, index=False)
+        print("Saved predictions_latest.csv (no model)")
         return
 
     bundle = joblib.load(MODEL_PATH)
-    model = bundle.get("model", bundle)
-    scaler = bundle.get("scaler", None)
-    feature_cols = bundle.get("features", FEATURES_FALLBACK)
-    model_name = bundle.get("model_name", "final_regression_model")
+
+    # Support either raw model or bundle dict
+    if isinstance(bundle, dict):
+        model = bundle.get("model", bundle)
+        scaler = bundle.get("scaler", None)
+        feature_cols = bundle.get("features", [])
+        target = bundle.get("target", "return_1h_ahead")
+        model_name = bundle.get("model_name", "best_model")
+    else:
+        model = bundle
+        scaler = None
+        feature_cols = []
+        target = "unknown"
+        model_name = "raw_model"
+
+    if not feature_cols:
+        raise RuntimeError(
+            "Your model PKL does not include 'features'. "
+            "Re-export model bundle with a feature list, or commit the JSON and hardcode feature order."
+        )
 
     X = df.copy()
+
+    # Ensure all required feature columns exist; fill missing with 0
     for c in feature_cols:
         if c not in X.columns:
             X[c] = 0.0
-    X = X[feature_cols]
+
+    # Convert to numeric & fill NaNs
+    for c in feature_cols:
+        X[c] = pd.to_numeric(X[c], errors="coerce")
+    X[feature_cols] = X[feature_cols].fillna(0.0)
+
+    X_mat = X[feature_cols].values
 
     if scaler is not None:
-        X = scaler.transform(X)
+        X_mat = scaler.transform(X_mat)
 
-    preds = model.predict(X)
+    preds = model.predict(X_mat)
 
     out = df[["ts_utc", "crypto"]].copy()
     out["yhat"] = preds
-    out["yhat_type"] = "return_1h"
+    out["yhat_type"] = target
     out["model_name"] = model_name
-    out["generated_at_utc"] = generated_at
+    out["generated_at_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     out["note"] = "ok"
-    atomic_write_csv(out, out_path)
+    out.to_csv(out_path, index=False)
     print("Saved predictions_latest.csv")
-
 
 if __name__ == "__main__":
     main()
