@@ -137,3 +137,7 @@ ENV/
 env/
 env.bak/
 venv.bak/
+
+data/live/
+*.log
+*_debug.txt
