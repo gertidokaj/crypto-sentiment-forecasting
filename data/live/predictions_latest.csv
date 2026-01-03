@@ -1,4 +1,17 @@
+<<<<<<< HEAD
 ts_utc,crypto,yhat,yhat_type,model_name,generated_at_utc,note
+<<<<<<< HEAD
 2026-01-03T15:00:00Z,BNB,0.00029549378030198565,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T15:19:33Z,ok
 2026-01-03T15:00:00Z,BTC,0.0005946725103717313,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T15:19:33Z,ok
 2026-01-03T15:00:00Z,ETH,0.000455320833917219,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T15:19:33Z,ok
+=======
+2026-01-03T13:00:00Z,BNB,0.000615185879951795,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T13:29:05Z,ok
+2026-01-03T13:00:00Z,BTC,0.0006533849562064792,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T13:29:05Z,ok
+2026-01-03T13:00:00Z,ETH,0.000583198186165053,return_1h_ahead,hourly_ridge_coldstart_v1,2026-01-03T13:29:05Z,ok
+=======
+ts_utc,crypto,yhat,yhat_type,model_name
+2026-01-03 01:00:00+00:00,BNB,7.65649967570468e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-03 01:00:00+00:00,BTC,0.00017290667212254264,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-03 01:00:00+00:00,ETH,4.398618793439538e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+>>>>>>> 1b95c18 (Finalize live dashboard UI, sentiment display, and prediction tracking)
+>>>>>>> b326b55 (Finalize live dashboard UI, sentiment display, and prediction tracking)

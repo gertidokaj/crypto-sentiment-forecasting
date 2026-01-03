@@ -1,89 +1,175 @@
-# live_pipeline/predict_live.py
-from __future__ import annotations
-
 import os
-import time
+import json
+from datetime import datetime, timezone
+
 import joblib
 import pandas as pd
-import numpy as np
 
-MODEL_PATH = os.path.join("models", "final_regression_model.pkl")
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def read_csv_safe(path: str) -> pd.DataFrame:
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
+
+
+def ensure_dir(path: str):
+    os.makedirs(path, exist_ok=True)
+
+
+def load_model_bundle(model_path: str):
+    obj = joblib.load(model_path)
+    # supports: bundle dict OR raw sklearn model
+    if isinstance(obj, dict):
+        model = obj.get("model", None)
+        features = obj.get("features", None)
+        model_name = obj.get("model_name", "model")
+        target = obj.get("target", "return_1h_ahead")
+        scaler = obj.get("scaler", None)
+        return model, scaler, features, model_name, target
+    return obj, None, None, "model", "return_1h_ahead"
+
+
+def apply_scaler_if_needed(X: pd.DataFrame, scaler):
+    if scaler is None:
+        return X
+    # scaler may be sklearn transformer expecting numpy array
+    try:
+        Xs = scaler.transform(X.values)
+        return pd.DataFrame(Xs, columns=X.columns, index=X.index)
+    except Exception:
+        return X
+
+
+def append_history(history_path: str, df_new: pd.DataFrame) -> pd.DataFrame:
+    if df_new.empty:
+        return pd.DataFrame()
+
+    df_new = df_new.copy()
+    if "ts_utc" in df_new.columns:
+        df_new["ts_utc"] = pd.to_datetime(df_new["ts_utc"], errors="coerce", utc=True)
+
+    df_old = read_csv_safe(history_path)
+    if not df_old.empty and "ts_utc" in df_old.columns:
+        df_old["ts_utc"] = pd.to_datetime(df_old["ts_utc"], errors="coerce", utc=True)
+
+    if df_old.empty:
+        df_all = df_new
+    else:
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
+
+    # drop duplicates (keep latest)
+    keys = [c for c in ["ts_utc", "crypto", "model_name", "yhat_type"] if c in df_all.columns]
+    if keys:
+        df_all = df_all.drop_duplicates(subset=keys, keep="last")
+
+    df_all = df_all.sort_values(["crypto", "ts_utc"]) if ("crypto" in df_all.columns and "ts_utc" in df_all.columns) else df_all
+    df_all.to_csv(history_path, index=False)
+    return df_all
+
 
 def main():
-    base = os.path.join("data", "live")
-    feat_path = os.path.join(base, "features_latest.csv")
-    out_path = os.path.join(base, "predictions_latest.csv")
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    LIVE_DIR = os.path.join(ROOT, "data", "live")
+    MODELS_DIR = os.path.join(ROOT, "models")
 
-    if not os.path.exists(feat_path):
-        raise FileNotFoundError(f"Missing {feat_path}. Run build_live_features first.")
+    ensure_dir(LIVE_DIR)
 
-    df = pd.read_csv(feat_path)
+    features_path = os.path.join(LIVE_DIR, "features_latest.csv")
+    pred_latest_path = os.path.join(LIVE_DIR, "predictions_latest.csv")
+    pred_hist_path = os.path.join(LIVE_DIR, "predictions_history.csv")
+    status_path = os.path.join(LIVE_DIR, "status.json")
 
-    # Ensure minimal id columns exist
-    for c in ["ts_utc", "crypto"]:
-        if c not in df.columns:
-            df[c] = ""
+    model_path = os.path.join(MODELS_DIR, "final_regression_model.pkl")
 
-    if not os.path.exists(MODEL_PATH):
-        out = df[["ts_utc", "crypto"]].copy()
-        out["yhat"] = np.nan
-        out["yhat_type"] = "return_1h"
-        out["model_name"] = "none"
-        out["generated_at_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        out["note"] = f"Model not found in {MODEL_PATH}"
-        out.to_csv(out_path, index=False)
-        print("Saved predictions_latest.csv (no model)")
+    features_df = read_csv_safe(features_path)
+    if features_df.empty:
+        # still write a status so the dashboard can show it
+        status = {
+            "ok": False,
+            "stage": "predict",
+            "message": "features_latest.csv not found or empty",
+            "updated_at_utc": utc_now_iso(),
+        }
+        with open(status_path, "w", encoding="utf-8") as f:
+            json.dump(status, f, indent=2)
         return
 
-    bundle = joblib.load(MODEL_PATH)
+    # timestamp parsing
+    if "ts_utc" in features_df.columns:
+        features_df["ts_utc"] = pd.to_datetime(features_df["ts_utc"], errors="coerce", utc=True)
 
-    # Support either raw model or bundle dict
-    if isinstance(bundle, dict):
-        model = bundle.get("model", bundle)
-        scaler = bundle.get("scaler", None)
-        feature_cols = bundle.get("features", [])
-        target = bundle.get("target", "return_1h_ahead")
-        model_name = bundle.get("model_name", "best_model")
+    model, scaler, feature_cols, model_name, target = load_model_bundle(model_path)
+
+    # Determine input columns
+    protected = {"ts_utc", "crypto"}
+    if feature_cols and isinstance(feature_cols, list) and len(feature_cols) > 0:
+        X = features_df.copy()
+        missing = [c for c in feature_cols if c not in X.columns]
+        if missing:
+            # If missing schema, fallback to numeric cols (safe mode)
+            num_cols = [c for c in X.columns if c not in protected and pd.api.types.is_numeric_dtype(X[c])]
+            X = X[num_cols].copy()
+        else:
+            X = X[feature_cols].copy()
     else:
-        model = bundle
-        scaler = None
-        feature_cols = []
-        target = "unknown"
-        model_name = "raw_model"
+        # fallback: all numeric columns excluding identifiers
+        num_cols = [c for c in features_df.columns if c not in protected and pd.api.types.is_numeric_dtype(features_df[c])]
+        X = features_df[num_cols].copy()
 
-    if not feature_cols:
-        raise RuntimeError(
-            "Your model PKL does not include 'features'. "
-            "Re-export model bundle with a feature list, or commit the JSON and hardcode feature order."
-        )
+    # fill NAs defensively
+    X = X.replace([float("inf"), float("-inf")], pd.NA)
+    X = X.fillna(0.0)
 
-    X = df.copy()
+    Xs = apply_scaler_if_needed(X, scaler)
 
-    # Ensure all required feature columns exist; fill missing with 0
-    for c in feature_cols:
-        if c not in X.columns:
-            X[c] = 0.0
+    # Predict
+    try:
+        yhat = model.predict(Xs.values)
+    except Exception:
+        # some models expect df not numpy
+        yhat = model.predict(Xs)
 
-    # Convert to numeric & fill NaNs
-    for c in feature_cols:
-        X[c] = pd.to_numeric(X[c], errors="coerce")
-    X[feature_cols] = X[feature_cols].fillna(0.0)
+    out = pd.DataFrame(
+        {
+            "ts_utc": features_df["ts_utc"] if "ts_utc" in features_df.columns else pd.NaT,
+            "crypto": features_df["crypto"] if "crypto" in features_df.columns else "UNKNOWN",
+            "yhat": yhat,
+            "yhat_type": str(target),
+            "model_name": str(model_name),
+        }
+    )
 
-    X_mat = X[feature_cols].values
+    # Ensure correct types
+    out["yhat"] = pd.to_numeric(out["yhat"], errors="coerce")
+    if "ts_utc" in out.columns:
+        out["ts_utc"] = pd.to_datetime(out["ts_utc"], errors="coerce", utc=True)
 
-    if scaler is not None:
-        X_mat = scaler.transform(X_mat)
+    # Save latest
+    out.to_csv(pred_latest_path, index=False)
 
-    preds = model.predict(X_mat)
+    # Append history
+    hist = append_history(pred_hist_path, out)
 
-    out = df[["ts_utc", "crypto"]].copy()
-    out["yhat"] = preds
-    out["yhat_type"] = target
-    out["model_name"] = model_name
-    out["generated_at_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    out["note"] = "ok"
-    out.to_csv(out_path, index=False)
-    print("Saved predictions_latest.csv")
+    # Status
+    status = {
+        "ok": True,
+        "stage": "predict",
+        "updated_at_utc": utc_now_iso(),
+        "predictions_latest_rows": int(len(out)),
+        "predictions_history_rows": int(len(hist)) if isinstance(hist, pd.DataFrame) else None,
+        "model_name": str(model_name),
+        "target": str(target),
+    }
+    with open(status_path, "w", encoding="utf-8") as f:
+        json.dump(status, f, indent=2)
+
 
 if __name__ == "__main__":
     main()
