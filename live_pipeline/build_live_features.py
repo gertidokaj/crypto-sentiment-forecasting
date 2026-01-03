@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import pandas as pd
 
-from .utils_io import ensure_dir, atomic_write_csv, utc_now, floor_to_hour_utc
+from .utils_io import ensure_dir, atomic_write_csv
 
 LIVE_DIR = os.path.join("data", "live")
 
@@ -19,8 +19,10 @@ FEATURE_COLS = [
     "vol_6", "vol_24",
 ]
 
+
 def _empty_features() -> pd.DataFrame:
     return pd.DataFrame(columns=FEATURE_COLS)
+
 
 def main():
     ensure_dir(LIVE_DIR)
@@ -35,6 +37,7 @@ def main():
 
     latest = pd.read_csv(latest_path)
 
+    # Ensure required columns exist
     for c in MARKET_COLS:
         if c not in latest.columns:
             latest[c] = pd.NA
@@ -50,6 +53,7 @@ def main():
             hist[c] = pd.NA
     hist = hist[MARKET_COLS].copy()
 
+    # Parse / coerce types
     hist["ts_utc"] = pd.to_datetime(hist["ts_utc"], errors="coerce", utc=True)
     latest["ts_utc"] = pd.to_datetime(latest["ts_utc"], errors="coerce", utc=True)
 
@@ -66,23 +70,38 @@ def main():
     feats = []
     for crypto, g in hist.sort_values("ts_utc").groupby("crypto"):
         g = g.copy()
+        g = g.set_index("ts_utc").sort_index()
 
-        g["return_1h"] = g["price_usd"].pct_change(1)
-        g["return_24h"] = g["price_usd"].pct_change(24)
+        # Resample to hourly (Pandas now prefers lowercase "h")
+        hourly = g.resample("1h").last().dropna(subset=["price_usd"]).copy()
+        if hourly.empty:
+            continue
 
-        g["ma_3"] = g["price_usd"].rolling(3).mean()
-        g["ma_6"] = g["price_usd"].rolling(6).mean()
-        g["ma_24"] = g["price_usd"].rolling(24).mean()
+        hourly["crypto"] = crypto
 
-        g["vol_6"] = g["return_1h"].rolling(6).std()
-        g["vol_24"] = g["return_1h"].rolling(24).std()
+        # Returns
+        hourly["return_1h"] = hourly["price_usd"].pct_change(1)
+        hourly["return_24h"] = hourly["price_usd"].pct_change(24)
 
+        # Moving averages
+        hourly["ma_3"] = hourly["price_usd"].rolling(3).mean()
+        hourly["ma_6"] = hourly["price_usd"].rolling(6).mean()
+        hourly["ma_24"] = hourly["price_usd"].rolling(24).mean()
+
+        # Volatility of 1h returns
+        hourly["vol_6"] = hourly["return_1h"].rolling(6).std()
+        hourly["vol_24"] = hourly["return_1h"].rolling(24).std()
+
+        # Target timestamp = latest timestamp for this crypto, floored to hour (lowercase "h")
         target_ts = latest.loc[latest["crypto"] == crypto, "ts_utc"].max()
         if pd.isna(target_ts):
             continue
+        target_ts = target_ts.floor("h")
 
-        row = g.loc[g["ts_utc"] <= target_ts].tail(1)[
-            ["ts_utc","crypto","price_usd","return_1h","return_24h","ma_3","ma_6","ma_24","vol_6","vol_24"]
+        # Take the last available hourly row <= target_ts
+        hourly = hourly.reset_index()
+        row = hourly.loc[hourly["ts_utc"] <= target_ts].tail(1)[
+            ["ts_utc", "crypto", "price_usd", "return_1h", "return_24h", "ma_3", "ma_6", "ma_24", "vol_6", "vol_24"]
         ]
         if not row.empty:
             feats.append(row)
@@ -98,6 +117,7 @@ def main():
         out = _empty_features()
 
     atomic_write_csv(out, out_path)
+
 
 if __name__ == "__main__":
     main()
