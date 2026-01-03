@@ -1,16 +1,4 @@
-<<<<<<< HEAD
-run_ts=2026-01-03T15:00:00Z
+run_ts=2026-01-03T16:00:00Z
 latest_rows=3
-history_rows=63
-=======
-<<<<<<< HEAD
-run_ts=2026-01-03T13:00:00Z
-latest_rows=3
-history_rows=57
-=======
-run_ts=2026-01-03T01:00:00Z
-latest_rows=3
-history_rows=24
->>>>>>> 1b95c18 (Finalize live dashboard UI, sentiment display, and prediction tracking)
->>>>>>> b326b55 (Finalize live dashboard UI, sentiment display, and prediction tracking)
+history_rows=70
 latest_cols=['ts_utc', 'crypto', 'price_usd', 'mktcap_usd', 'volume_24h_usd', 'pct_change_1h', 'pct_change_24h', 'source', 'fetched_at_utc']

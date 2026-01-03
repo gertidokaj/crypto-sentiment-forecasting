@@ -1,23 +1,9 @@
 {
-<<<<<<< HEAD
-  "ts_utc": "2026-01-03T15:00:00Z",
-  "market_latest_rows": 3,
-  "market_history_rows": 63,
-  "updated_at_utc": "2026-01-03T15:19:30Z"
-=======
-<<<<<<< HEAD
-  "ts_utc": "2026-01-03T13:00:00Z",
-  "market_latest_rows": 3,
-  "market_history_rows": 57,
-  "updated_at_utc": "2026-01-03T13:29:02Z"
-=======
   "ok": true,
   "stage": "predict",
-  "updated_at_utc": "2026-01-03T13:24:06Z",
+  "updated_at_utc": "2026-01-03T16:27:19Z",
   "predictions_latest_rows": 3,
   "predictions_history_rows": 3,
   "model_name": "hourly_ridge_coldstart_v1",
   "target": "return_1h_ahead"
->>>>>>> 1b95c18 (Finalize live dashboard UI, sentiment display, and prediction tracking)
->>>>>>> b326b55 (Finalize live dashboard UI, sentiment display, and prediction tracking)
 }
