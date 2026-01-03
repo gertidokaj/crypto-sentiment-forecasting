@@ -78,7 +78,16 @@ def read_csv_safe(path: str) -> pd.DataFrame:
     if not os.path.exists(path):
         return pd.DataFrame()
     try:
-        return pd.read_csv(path)
+        # Handle empty files cleanly
+        if os.path.getsize(path) == 0:
+            return pd.DataFrame()
+
+        # Try standard CSV
+        try:
+            return pd.read_csv(path)
+        except Exception:
+            # Sometimes news feeds get written with ; delimiter
+            return pd.read_csv(path, sep=";", engine="python")
     except Exception:
         return pd.DataFrame()
 
@@ -169,10 +178,6 @@ def signal_strength(yhat: float, recent_vol: float) -> str:
     return "High"
 
 def sentiment_bucket(score: float) -> tuple[str, str]:
-    """
-    Score is expected on [-1, +1]. Buckets are tighter than before to avoid
-    'Neutral' dominating when score is slightly positive/negative.
-    """
     if pd.isna(score):
         return ("—", "warn")
     if score >= 0.20:
@@ -186,13 +191,75 @@ def sentiment_bucket(score: float) -> tuple[str, str]:
     return ("Neutral", "warn")
 
 def sentiment_index(score: float) -> float:
-    """
-    Convert sentiment score [-1, +1] to an index [0, 100].
-    """
     if pd.isna(score):
         return float("nan")
     x = max(-1.0, min(1.0, float(score)))
     return (x + 1.0) * 50.0
+
+def normalize_crypto(df: pd.DataFrame) -> pd.DataFrame:
+    # IMPORTANT: do NOT drop rows aggressively; only normalize if crypto exists.
+    if df.empty or "crypto" not in df.columns:
+        return df
+    out = df.copy()
+    out["crypto"] = out["crypto"].astype(str).str.strip().str.upper()
+    return out
+
+def standardize_news(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Make the News tab resilient to different schemas.
+    Accepts any of: ts_utc / timestamp / published / published_at, etc.
+    Adds crypto='ALL' if missing.
+    """
+    if df.empty:
+        return df
+
+    out = df.copy()
+
+    # Timestamp column normalization
+    if "ts_utc" not in out.columns:
+        for alt in ["timestamp_utc", "timestamp", "published", "published_at", "time", "date"]:
+            if alt in out.columns:
+                out = out.rename(columns={alt: "ts_utc"})
+                break
+
+    # Ensure crypto exists
+    if "crypto" not in out.columns:
+        out["crypto"] = "ALL"
+
+    # Title/source/link normalization (optional but helps UI)
+    if "source" not in out.columns:
+        for alt in ["publisher", "site", "domain"]:
+            if alt in out.columns:
+                out = out.rename(columns={alt: "source"})
+                break
+
+    if "title" not in out.columns:
+        for alt in ["headline", "name"]:
+            if alt in out.columns:
+                out = out.rename(columns={alt: "title"})
+                break
+        if "title" not in out.columns:
+            out["title"] = ""
+
+    if "link" not in out.columns:
+        for alt in ["url", "href"]:
+            if alt in out.columns:
+                out = out.rename(columns={alt: "link"})
+                break
+        if "link" not in out.columns:
+            out["link"] = ""
+
+    # Parse timestamp if present
+    if "ts_utc" in out.columns:
+        out["ts_utc"] = parse_ts(out["ts_utc"])
+
+    # Sentiment numeric if present
+    if "sentiment" in out.columns:
+        out["sentiment"] = pd.to_numeric(out["sentiment"], errors="coerce")
+
+    # Normalize crypto formatting
+    out = normalize_crypto(out)
+    return out
 
 def compute_actual_1h_ahead(market_hist: pd.DataFrame, price_col: str) -> pd.DataFrame:
     """
@@ -201,20 +268,30 @@ def compute_actual_1h_ahead(market_hist: pd.DataFrame, price_col: str) -> pd.Dat
     """
     if market_hist.empty or "ts_utc" not in market_hist.columns or "crypto" not in market_hist.columns:
         return pd.DataFrame()
-    if price_col not in market_hist.columns:
+    if not price_col or price_col not in market_hist.columns:
         return pd.DataFrame()
 
     df = market_hist[["ts_utc", "crypto", price_col]].copy()
     df = df.dropna(subset=["ts_utc", "crypto", price_col])
+
+    # CRITICAL: convert to numeric to avoid 'str/str' errors
+    df[price_col] = pd.to_numeric(df[price_col], errors="coerce")
+    df = df.dropna(subset=[price_col])
+
     df = df.sort_values(["crypto", "ts_utc"])
-    df["actual_1h_ahead"] = df.groupby("crypto")[price_col].shift(-1) / df[price_col] - 1.0
+
+    denom = df[price_col].replace(0, pd.NA)
+    df["actual_1h_ahead"] = df.groupby("crypto")[price_col].shift(-1) / denom - 1.0
+
     return df[["ts_utc", "crypto", "actual_1h_ahead"]].copy()
 
 def safe_row_count(path: str) -> int | None:
+    if not os.path.exists(path):
+        return None
+    if os.path.getsize(path) == 0:
+        return 0
     df = read_csv_safe(path)
-    if df.empty:
-        return 0 if os.path.exists(path) else None
-    return int(len(df))
+    return int(len(df)) if not df.empty else 0
 
 def approx_hours_covered(df: pd.DataFrame) -> float | None:
     if df.empty or "ts_utc" not in df.columns:
@@ -240,28 +317,29 @@ history_hours = st.sidebar.slider("History window (hours)", 24, 336, 72, step=12
 # -----------------------------
 # Load data
 # -----------------------------
-market_hist = read_csv_safe(FILES["market_history"])
-market_latest = read_csv_safe(FILES["market_latest"])
-features_latest = read_csv_safe(FILES["features_latest"])
-pred_latest = read_csv_safe(FILES["predictions_latest"])
-pred_hist = read_csv_safe(FILES["predictions_history"])
-news_latest = read_csv_safe(FILES["news_latest"])
+market_hist = normalize_crypto(read_csv_safe(FILES["market_history"]))
+market_latest = normalize_crypto(read_csv_safe(FILES["market_latest"]))
+features_latest = normalize_crypto(read_csv_safe(FILES["features_latest"]))
+pred_latest = normalize_crypto(read_csv_safe(FILES["predictions_latest"]))
+pred_hist = normalize_crypto(read_csv_safe(FILES["predictions_history"]))
+news_latest = standardize_news(read_csv_safe(FILES["news_latest"]))
 status = read_json_safe(FILES["status"])
 
-for df in [market_hist, market_latest, features_latest, pred_latest, pred_hist, news_latest]:
+for df in [market_hist, market_latest, features_latest, pred_latest, pred_hist]:
     if not df.empty and "ts_utc" in df.columns:
         df["ts_utc"] = parse_ts(df["ts_utc"])
 
-coins = DEFAULT_COINS.copy()
-for df in [market_hist, features_latest, pred_latest, pred_hist]:
-    if not df.empty and "crypto" in df.columns:
-        coins = sorted([c for c in df["crypto"].dropna().unique().tolist() if isinstance(c, str)])
-        break
+# Coins list
+coins = []
+if not market_hist.empty and "crypto" in market_hist.columns:
+    coins = sorted([c for c in market_hist["crypto"].dropna().unique().tolist() if c and c != "ALL"])
+if not coins:
+    coins = DEFAULT_COINS.copy()
 
 PRICE_COL = pick_first_col(market_hist, ["close", "price_usd", "price", "close_usd"])
 
 # -----------------------------
-# Header + Asset selector ABOVE tabs
+# Header
 # -----------------------------
 topL, topM, topR = st.columns([0.58, 0.20, 0.22], vertical_alignment="center")
 
@@ -270,7 +348,7 @@ with topL:
     st.caption("Live outputs from `data/live/` (market, features, predictions, news).")
 
 with topM:
-    selected_coin = st.selectbox("Asset", coins if coins else DEFAULT_COINS, index=0)
+    selected_coin = st.selectbox("Asset", coins, index=0)
 
 with topR:
     label, cls, last_run_str = status_badge(status)
@@ -288,14 +366,14 @@ with topR:
 st.markdown("---")
 
 # -----------------------------
-# Prepare per-coin market history + window logic
+# Market history window
 # -----------------------------
 coin_hist_full = pd.DataFrame()
 if not market_hist.empty:
-    if "crypto" in market_hist.columns:
-        coin_hist_full = market_hist[market_hist["crypto"] == selected_coin].copy()
-    else:
-        coin_hist_full = market_hist.copy()
+    coin_hist_full = market_hist[market_hist["crypto"] == selected_coin].copy() if "crypto" in market_hist.columns else market_hist.copy()
+
+if not coin_hist_full.empty and PRICE_COL and PRICE_COL in coin_hist_full.columns:
+    coin_hist_full[PRICE_COL] = pd.to_numeric(coin_hist_full[PRICE_COL], errors="coerce")
 
 available_hours = approx_hours_covered(coin_hist_full)
 available_rows = int(len(coin_hist_full)) if not coin_hist_full.empty else 0
@@ -304,28 +382,18 @@ coin_hist = coin_hist_full.copy()
 effective_hours = history_hours
 
 if not coin_hist.empty and "ts_utc" in coin_hist.columns:
-    coin_hist = coin_hist.sort_values("ts_utc")
+    coin_hist = coin_hist.dropna(subset=["ts_utc"]).sort_values("ts_utc")
     latest_ts = coin_hist["ts_utc"].max()
     cutoff = latest_ts - pd.Timedelta(hours=history_hours)
     coin_hist = coin_hist[coin_hist["ts_utc"] >= cutoff].copy()
-
     if available_hours is not None:
         effective_hours = min(history_hours, int(round(available_hours)))
 
-# -----------------------------
-# Per-coin latest rows
-# -----------------------------
-feat_row = pd.DataFrame()
-if not features_latest.empty and "crypto" in features_latest.columns:
-    feat_row = features_latest[features_latest["crypto"] == selected_coin].copy()
+# Latest rows
+feat_row = features_latest[features_latest["crypto"] == selected_coin].copy() if (not features_latest.empty and "crypto" in features_latest.columns) else pd.DataFrame()
+pred_row = pred_latest[pred_latest["crypto"] == selected_coin].copy() if (not pred_latest.empty and "crypto" in pred_latest.columns) else pd.DataFrame()
 
-pred_row = pd.DataFrame()
-if not pred_latest.empty and "crypto" in pred_latest.columns:
-    pred_row = pred_latest[pred_latest["crypto"] == selected_coin].copy()
-
-# -----------------------------
-# KPIs
-# -----------------------------
+# KPIs from market
 latest_price = float("nan")
 latest_ts_str = "—"
 ret_1h = float("nan")
@@ -337,12 +405,13 @@ if not coin_hist.empty and PRICE_COL and PRICE_COL in coin_hist.columns:
         latest_ts_str = coin_hist["ts_utc"].iloc[-1].strftime("%Y-%m-%d %H:%M UTC")
     if len(coin_hist) >= 2:
         prev_price = coin_hist[PRICE_COL].iloc[-2]
-        if prev_price and prev_price != 0:
+        if pd.notna(prev_price) and prev_price != 0:
             ret_1h = (latest_price / prev_price) - 1.0
     tmp_ret = coin_hist[PRICE_COL].pct_change()
     if tmp_ret.notna().sum() >= 6:
         recent_vol = tmp_ret.tail(12).std()
 
+# Prediction row
 yhat = float("nan")
 yhat_type = "—"
 model_name = "—"
@@ -350,7 +419,7 @@ pred_ts_str = "—"
 
 if not pred_row.empty:
     if "yhat" in pred_row.columns:
-        yhat = float(pred_row["yhat"].iloc[0])
+        yhat = float(pd.to_numeric(pred_row["yhat"].iloc[0], errors="coerce"))
     if "yhat_type" in pred_row.columns:
         yhat_type = str(pred_row["yhat_type"].iloc[0])
     if "model_name" in pred_row.columns:
@@ -361,37 +430,34 @@ if not pred_row.empty:
 dir_label, dir_cls = direction_label(yhat)
 strength = signal_strength(yhat, recent_vol)
 
+# Feature snapshot
 ma_6 = float("nan")
 vol_6 = float("nan")
 if not feat_row.empty:
     if "ma_6" in feat_row.columns:
-        ma_6 = feat_row["ma_6"].iloc[0]
+        ma_6 = pd.to_numeric(feat_row["ma_6"].iloc[0], errors="coerce")
     if "vol_6" in feat_row.columns:
-        vol_6 = feat_row["vol_6"].iloc[0]
+        vol_6 = pd.to_numeric(feat_row["vol_6"].iloc[0], errors="coerce")
 
 # -----------------------------
-# Sentiment (from news_latest)
+# Sentiment from news
 # -----------------------------
 news_sent_score = float("nan")
 news_sent_idx = float("nan")
 news_sent_bucket, news_sent_cls = ("—", "warn")
 news_count = 0
+pos_pct = neu_pct = neg_pct = float("nan")
 
-pos_pct = float("nan")
-neu_pct = float("nan")
-neg_pct = float("nan")
-
-if not news_latest.empty and "sentiment" in news_latest.columns:
-    df_news = news_latest.copy()
-
-    # allow ALL rows for general market context, but keep coin filtering consistent with your UI
+df_news = news_latest.copy() if not news_latest.empty else pd.DataFrame()
+if not df_news.empty and "sentiment" in df_news.columns:
+    # Keep selected + ALL
     if "crypto" in df_news.columns:
         df_coin = df_news[df_news["crypto"].isin([selected_coin, "ALL"])].copy()
     else:
         df_coin = df_news.copy()
 
-    df_coin = df_coin[pd.to_numeric(df_coin["sentiment"], errors="coerce").notna()].copy()
     df_coin["sentiment"] = pd.to_numeric(df_coin["sentiment"], errors="coerce")
+    df_coin = df_coin[df_coin["sentiment"].notna()].copy()
 
     news_count = int(len(df_coin))
     if news_count > 0:
@@ -405,13 +471,9 @@ if not news_latest.empty and "sentiment" in news_latest.columns:
         neg_pct = float((s < -0.10).mean()) * 100.0
 
 # -----------------------------
-# Prediction track record (gate display until evaluation exists)
+# Prediction track record
 # -----------------------------
-pred_track = pd.DataFrame()
-if not pred_hist.empty:
-    pred_track = pred_hist.copy()
-elif not pred_latest.empty:
-    pred_track = pred_latest.copy()
+pred_track = pred_hist.copy() if not pred_hist.empty else pred_latest.copy()
 
 if not pred_track.empty:
     if "prediction" in pred_track.columns and "yhat" not in pred_track.columns:
@@ -424,16 +486,11 @@ actuals = compute_actual_1h_ahead(market_hist, PRICE_COL) if (PRICE_COL and not 
 pred_track_coin = pd.DataFrame()
 df_eval = pd.DataFrame()
 
-if (
-    not pred_track.empty
-    and not actuals.empty
-    and "ts_utc" in pred_track.columns
-    and "crypto" in pred_track.columns
-):
+if (not pred_track.empty and not actuals.empty and "ts_utc" in pred_track.columns and "crypto" in pred_track.columns):
     merged = pred_track.merge(actuals, on=["ts_utc", "crypto"], how="left")
     merged_coin = merged[merged["crypto"] == selected_coin].copy()
     if not merged_coin.empty and "ts_utc" in merged_coin.columns:
-        merged_coin = merged_coin.sort_values("ts_utc")
+        merged_coin = merged_coin.dropna(subset=["ts_utc"]).sort_values("ts_utc")
         tmax = merged_coin["ts_utc"].max()
         cutoff = tmax - pd.Timedelta(hours=history_hours)
         merged_coin = merged_coin[merged_coin["ts_utc"] >= cutoff].copy()
@@ -467,9 +524,6 @@ with tab_overview:
     kpi(k3, "Predicted Next 1h Return", fmt_pct(yhat), f"{yhat_type} • {model_name}")
     kpi(k4, "Feature Snapshot", f"MA(6): {fmt_num(ma_6, 2)}", f"Vol(6): {fmt_num(vol_6, 6)}")
 
-    # Make sentiment easy to read on the first page:
-    # - Show Index (0-100) as main
-    # - Show score (-1..+1) + distribution in sub
     idx_val = "—" if pd.isna(news_sent_idx) else f"{news_sent_idx:.0f}/100"
     score_val = fmt_num(news_sent_score, 3)
     dist_sub = "—"
@@ -485,7 +539,6 @@ with tab_overview:
     st.markdown("")
     arrow = "▲" if dir_label == "UP" else ("▼" if dir_label == "DOWN" else "•")
 
-    # Short, professional summary line (no “assistant-only” language)
     st.markdown(
         f"""
         <div class="callout">
@@ -513,21 +566,14 @@ with tab_overview:
         st.markdown("### Price history")
 
         if available_hours is not None:
-            st.caption(
-                f"Window requested: {history_hours}h • Data available: {available_hours:.1f}h • Rows plotted: {len(coin_hist)}"
-            )
+            st.caption(f"Window requested: {history_hours}h • Data available: {available_hours:.1f}h • Rows plotted: {len(coin_hist)}")
         else:
             st.caption(f"Window requested: {history_hours}h • Rows plotted: {len(coin_hist)}")
 
         if coin_hist.empty or "ts_utc" not in coin_hist.columns or not PRICE_COL or PRICE_COL not in coin_hist.columns:
             st.info("Price chart not available yet.")
         else:
-            fig = px.line(
-                coin_hist,
-                x="ts_utc",
-                y=PRICE_COL,
-                title=f"{selected_coin} price (showing ~{effective_hours}h)",
-            )
+            fig = px.line(coin_hist, x="ts_utc", y=PRICE_COL, title=f"{selected_coin} price (showing ~{effective_hours}h)")
             fig.update_layout(height=360, margin=dict(l=10, r=10, t=45, b=10))
             st.plotly_chart(fig, use_container_width=True)
 
@@ -545,23 +591,16 @@ with tab_overview:
     st.markdown("---")
     st.markdown("### Prediction track record")
 
-    # Always show counts; only show evaluation/plots when at least 1 realized return exists
-    pred_hist_rows = safe_row_count(FILES["predictions_history"])
-    pred_latest_rows = safe_row_count(FILES["predictions_latest"])
-    pred_hist_rows = 0 if pred_hist_rows is None else pred_hist_rows
-    pred_latest_rows = 0 if pred_latest_rows is None else pred_latest_rows
-
+    pred_hist_rows = safe_row_count(FILES["predictions_history"]) or 0
+    pred_latest_rows = safe_row_count(FILES["predictions_latest"]) or 0
     points_in_window = int(len(pred_track_coin)) if not pred_track_coin.empty else 0
-    realized = int(df_eval["actual_1h_ahead"].notna().sum()) if not df_eval.empty and "actual_1h_ahead" in df_eval.columns else 0
 
     st.caption(
         f"Predictions logged: {pred_hist_rows} rows • Latest batch: {pred_latest_rows} rows • Points in window: {points_in_window} • Evaluated: {len(df_eval) if not df_eval.empty else 0}"
     )
 
     if df_eval.empty:
-        st.info(
-            "Evaluation will appear after the next hourly close is recorded (requires one additional hour of market history)."
-        )
+        st.info("Evaluation will appear after the next hourly close is recorded (requires one additional hour of market history).")
     else:
         hit_rate = df_eval["direction_hit"].mean() if len(df_eval) > 0 else float("nan")
         mae = df_eval["error"].abs().mean() if len(df_eval) > 0 else float("nan")
@@ -572,24 +611,13 @@ with tab_overview:
         kpi(m3, "Evaluated points", f"{len(df_eval)}", "Aligned rows")
 
         c3, c4 = st.columns([0.62, 0.38])
-
         with c3:
-            figp = px.line(
-                df_eval,
-                x="ts_utc",
-                y=["yhat", "actual_1h_ahead"],
-                title="Predicted vs realized next-hour return",
-            )
+            figp = px.line(df_eval, x="ts_utc", y=["yhat", "actual_1h_ahead"], title="Predicted vs realized next-hour return")
             figp.update_layout(height=360, margin=dict(l=10, r=10, t=45, b=10), legend_title_text="")
             st.plotly_chart(figp, use_container_width=True)
 
         with c4:
-            fige = px.line(
-                df_eval,
-                x="ts_utc",
-                y="error",
-                title="Prediction error (prediction - realized)",
-            )
+            fige = px.line(df_eval, x="ts_utc", y="error", title="Prediction error (prediction - realized)")
             fige.update_layout(height=360, margin=dict(l=10, r=10, t=45, b=10))
             st.plotly_chart(fige, use_container_width=True)
 
@@ -600,7 +628,7 @@ with tab_news:
     st.markdown("### Latest news")
 
     if news_latest.empty:
-        st.info("No news found yet.")
+        st.info("No news found yet. (This usually means data/live/news_latest.csv is empty, missing, or written with a different schema.)")
     else:
         df = news_latest.copy()
 
@@ -612,8 +640,7 @@ with tab_news:
         with f3:
             text_search = st.text_input("Search title/source", value="", placeholder="Type keywords…")
 
-        # dedupe by link if available
-        if "link" in df.columns:
+        if "link" in df.columns and df["link"].astype(str).str.len().sum() > 0:
             df = df.drop_duplicates(subset=["link"], keep="first")
 
         if "ts_utc" in df.columns:
@@ -628,16 +655,10 @@ with tab_news:
 
         if text_search.strip():
             q = text_search.strip().lower()
-            cols_text = []
-            if "title" in df.columns:
-                cols_text.append("title")
-            if "source" in df.columns:
-                cols_text.append("source")
-            if cols_text:
-                mask = False
-                for c in cols_text:
-                    mask = mask | df[c].fillna("").astype(str).str.lower().str.contains(q)
-                df = df[mask].copy()
+            mask = False
+            for c in [c for c in ["title", "source"] if c in df.columns]:
+                mask = mask | df[c].fillna("").astype(str).str.lower().str.contains(q)
+            df = df[mask].copy() if isinstance(mask, pd.Series) else df
 
         sent_score = float("nan")
         sent_idx = float("nan")
@@ -669,43 +690,31 @@ with tab_news:
 
         st.markdown("---")
 
-        # Make links clickable
         df_show = df.copy()
-        if "link" in df_show.columns:
-            df_show["open"] = df_show["link"]
-        else:
-            df_show["open"] = ""
+        df_show["open"] = df_show["link"] if "link" in df_show.columns else ""
 
         cols = [c for c in ["ts_utc", "crypto", "title", "source", "sentiment", "open"] if c in df_show.columns]
 
         column_config = {}
         if "open" in cols:
-            column_config["open"] = st.column_config.LinkColumn(
-                "open",
-                help="Open article",
-                display_text="open",
-            )
+            column_config["open"] = st.column_config.LinkColumn("open", help="Open article", display_text="open")
         if "sentiment" in cols:
-            column_config["sentiment"] = st.column_config.NumberColumn(
-                "sentiment",
-                help="Sentiment score (scale -1 to +1)",
-                format="%.4f",
-            )
+            column_config["sentiment"] = st.column_config.NumberColumn("sentiment", help="Sentiment score (scale -1 to +1)", format="%.4f")
         if "ts_utc" in cols:
             column_config["ts_utc"] = st.column_config.DatetimeColumn("ts_utc")
 
         st.data_editor(
-            df_show[cols].head(80),
+            df_show[cols].head(120),
             use_container_width=True,
             hide_index=True,
             disabled=True,
             column_config=column_config,
         )
 
-        if "sentiment" in df_show.columns:
+        if "sentiment" in df_show.columns and df_show["sentiment"].notna().sum() > 0:
             st.markdown("---")
             st.markdown("### Sentiment distribution (latest batch)")
-            fig3 = px.histogram(df_show, x="sentiment", nbins=20, title="Sentiment histogram")
+            fig3 = px.histogram(df_show.dropna(subset=["sentiment"]), x="sentiment", nbins=20, title="Sentiment histogram")
             fig3.update_layout(height=340, margin=dict(l=10, r=10, t=45, b=10))
             st.plotly_chart(fig3, use_container_width=True)
 
@@ -722,24 +731,11 @@ with tab_system:
 
     ts_val = status.get("ts_utc") or status.get("updated_at_utc") or "—"
 
-    mh = status.get("market_history_rows", None)
-    ml = status.get("market_latest_rows", None)
-
-    if mh is None:
-        mh = safe_row_count(FILES["market_history"])
-    if ml is None:
-        ml = safe_row_count(FILES["market_latest"])
-
-    pr_latest = status.get("predictions_latest_rows", None)
-    pr_hist = status.get("predictions_history_rows", None)
-    if pr_latest is None:
-        pr_latest = safe_row_count(FILES["predictions_latest"])
-    if pr_hist is None:
-        pr_hist = safe_row_count(FILES["predictions_history"])
-
-    nl = status.get("news_latest_rows", None)
-    if nl is None:
-        nl = safe_row_count(FILES["news_latest"])
+    mh = status.get("market_history_rows", None) or safe_row_count(FILES["market_history"])
+    ml = status.get("market_latest_rows", None) or safe_row_count(FILES["market_latest"])
+    pr_latest = status.get("predictions_latest_rows", None) or safe_row_count(FILES["predictions_latest"])
+    pr_hist = status.get("predictions_history_rows", None) or safe_row_count(FILES["predictions_history"])
+    nl = status.get("news_latest_rows", None) or safe_row_count(FILES["news_latest"])
 
     st.markdown(
         f"""
@@ -762,7 +758,6 @@ with tab_system:
             rel = os.path.relpath(p, BASE_DIR)
             st.code(f"{k}: {rel}")
 
-# Optional (recommended in deployments)
 st.markdown(
     "<div class='small-note'>For research demonstration only. Not financial advice.</div>",
     unsafe_allow_html=True,
