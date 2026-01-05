@@ -50,6 +50,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-05 20:00:00+00:00,BNB,0.0002379446671317,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 21:00:00+00:00,BNB,-0.0002969879788486,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 22:00:00+00:00,BNB,-5.715998021425811e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-05 23:00:00+00:00,BNB,-0.00013738874740843327,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -101,6 +102,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-05 20:00:00+00:00,BTC,3.474095788017826e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 21:00:00+00:00,BTC,-0.00030418932343,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 22:00:00+00:00,BTC,9.729018897908454e-06,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-05 23:00:00+00:00,BTC,-0.00011649751992633242,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -151,4 +153,5 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-05 19:00:00+00:00,ETH,1.6597890246796234e-06,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 20:00:00+00:00,ETH,4.623147486206868e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-05 21:00:00+00:00,ETH,-0.0001379455834784,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-01-05 22:00:00+00:00,ETH,-0.00013644490688833005,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-05 22:00:00+00:00,ETH,-0.0001364449068883,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-05 23:00:00+00:00,ETH,-0.0003087109802808636,return_1h_ahead,hourly_ridge_coldstart_v1
