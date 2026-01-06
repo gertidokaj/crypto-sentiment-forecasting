@@ -1,4 +1,4 @@
 ts_utc,crypto,yhat,yhat_type,model_name
-2026-01-06 12:00:00+00:00,BNB,-0.00016354818727917542,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-01-06 12:00:00+00:00,BTC,0.0002656809064751292,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-01-06 12:00:00+00:00,ETH,0.0004082569784685838,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-06 13:00:00+00:00,BNB,1.331951925028109e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-06 13:00:00+00:00,BTC,0.0005416060085089729,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-06 13:00:00+00:00,ETH,0.0003281450491860429,return_1h_ahead,hourly_ridge_coldstart_v1
