@@ -1,4 +1,4 @@
-run_ts=2026-01-15T13:00:00Z
+run_ts=2026-01-15T14:00:00Z
 latest_rows=3
-history_rows=853
+history_rows=856
 latest_cols=['ts_utc', 'crypto', 'price_usd', 'mktcap_usd', 'volume_24h_usd', 'pct_change_1h', 'pct_change_24h', 'source', 'fetched_at_utc']
