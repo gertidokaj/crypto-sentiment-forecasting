@@ -424,6 +424,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-22 21:00:00+00:00,BNB,0.0002072952139307,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 22:00:00+00:00,BNB,0.0001951217483656,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 23:00:00+00:00,BNB,-2.0121884778395032e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-23 01:00:00+00:00,BNB,0.00018263632706380761,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -849,6 +850,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-22 21:00:00+00:00,BTC,0.0001249699746718,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 22:00:00+00:00,BTC,-6.571466769406028e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 23:00:00+00:00,BTC,6.54729913185778e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-23 01:00:00+00:00,BTC,0.00031250252860273785,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -1273,4 +1275,5 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-01-22 20:00:00+00:00,ETH,-0.0017988516803784,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 21:00:00+00:00,ETH,-0.0004440279566171,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-22 22:00:00+00:00,ETH,-0.0003518376781324,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-01-22 23:00:00+00:00,ETH,-0.0003309482477189326,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-22 23:00:00+00:00,ETH,-0.0003309482477189,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-01-23 01:00:00+00:00,ETH,8.544172420305092e-05,return_1h_ahead,hourly_ridge_coldstart_v1
