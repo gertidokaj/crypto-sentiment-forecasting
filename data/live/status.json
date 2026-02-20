@@ -1,9 +1,9 @@
 {
   "ok": true,
   "stage": "predict",
-  "updated_at_utc": "2026-02-20T16:38:42Z",
+  "updated_at_utc": "2026-02-20T17:37:57Z",
   "predictions_latest_rows": 3,
-  "predictions_history_rows": 2952,
+  "predictions_history_rows": 2955,
   "model_name": "hourly_ridge_coldstart_v1",
   "target": "return_1h_ahead"
 }
