@@ -1365,6 +1365,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-12 02:00:00+00:00,BNB,-0.0001246469666637,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 04:00:00+00:00,BNB,-0.0001573716460688,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 05:00:00+00:00,BNB,-1.4455819785751188e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-12 06:00:00+00:00,BNB,-1.3338603594114685e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -2731,6 +2732,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-12 02:00:00+00:00,BTC,-0.0001574124534668,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 04:00:00+00:00,BTC,-0.0002162298536294,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 05:00:00+00:00,BTC,-6.857164195069894e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-12 06:00:00+00:00,BTC,-3.2776908530735764e-06,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -4096,4 +4098,5 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-11 23:00:00+00:00,ETH,-0.0002115013284097,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 02:00:00+00:00,ETH,-0.0001147460157712,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-12 04:00:00+00:00,ETH,-0.0005330786644827,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-03-12 05:00:00+00:00,ETH,-0.00027634602141662646,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-12 05:00:00+00:00,ETH,-0.0002763460214166,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-12 06:00:00+00:00,ETH,-0.00032913907860282644,return_1h_ahead,hourly_ridge_coldstart_v1
