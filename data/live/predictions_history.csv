@@ -1409,7 +1409,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-14 08:00:00+00:00,BNB,0.0002173415694428,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 09:00:00+00:00,BNB,0.0002511857018059,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 10:00:00+00:00,BNB,0.0001678253527827,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-03-14 11:00:00+00:00,BNB,0.00024180017574502148,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-14 11:00:00+00:00,BNB,0.000241800175745,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-14 12:00:00+00:00,BNB,0.0004068607274385054,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -2821,6 +2822,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-14 09:00:00+00:00,BTC,-0.0001371256173833,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 10:00:00+00:00,BTC,-0.000103478136515,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 11:00:00+00:00,BTC,-1.795847388508156e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-14 12:00:00+00:00,BTC,0.0003442960074477201,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -4232,3 +4234,4 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-14 09:00:00+00:00,ETH,-0.0002440651170973,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 10:00:00+00:00,ETH,-0.0001540994393239,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-14 11:00:00+00:00,ETH,3.0131581314278262e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-14 12:00:00+00:00,ETH,0.0002744976542476438,return_1h_ahead,hourly_ridge_coldstart_v1
