@@ -1688,7 +1688,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-29 17:00:00+00:00,BNB,9.285902938719371e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 18:00:00+00:00,BNB,0.0001629335681188,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 19:00:00+00:00,BNB,0.0001515489344275,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-03-29 20:00:00+00:00,BNB,0.0001801562277345838,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-29 20:00:00+00:00,BNB,0.0001801562277345,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-29 21:00:00+00:00,BNB,2.968284837284415e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -3379,6 +3380,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-29 18:00:00+00:00,BTC,0.0001139987629642,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 19:00:00+00:00,BTC,3.4017440145653495e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 20:00:00+00:00,BTC,6.965863245849801e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-29 21:00:00+00:00,BTC,6.547839279530832e-06,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -5069,3 +5071,4 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-03-29 18:00:00+00:00,ETH,-0.0001535136553418,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 19:00:00+00:00,ETH,-8.599414155362032e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-03-29 20:00:00+00:00,ETH,-1.1642668141151368e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-03-29 21:00:00+00:00,ETH,-6.872375824509754e-05,return_1h_ahead,hourly_ridge_coldstart_v1
