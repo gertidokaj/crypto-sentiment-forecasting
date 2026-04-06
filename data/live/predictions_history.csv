@@ -1816,7 +1816,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-06 10:00:00+00:00,BNB,-0.0007753581243853,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 11:00:00+00:00,BNB,9.891021905621334e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 13:00:00+00:00,BNB,0.0001221618465782,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-06 14:00:00+00:00,BNB,0.0004515759411957116,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 14:00:00+00:00,BNB,0.0004515759411957,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 15:00:00+00:00,BNB,0.0004540879459758048,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -3634,7 +3635,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-06 10:00:00+00:00,BTC,-0.0011674979268135,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 11:00:00+00:00,BTC,-0.0001172630396733,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 13:00:00+00:00,BTC,-0.0002403092520055,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-06 14:00:00+00:00,BTC,-0.00013643473400456015,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 14:00:00+00:00,BTC,-0.0001364347340045,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 15:00:00+00:00,BTC,1.6762409272193745e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -5452,4 +5454,5 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-06 10:00:00+00:00,ETH,-0.001928717370405,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 11:00:00+00:00,ETH,-0.0001148614315217,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-06 13:00:00+00:00,ETH,-2.8456118567342413e-07,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-06 14:00:00+00:00,ETH,0.00016075436921048894,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 14:00:00+00:00,ETH,0.0001607543692104,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-06 15:00:00+00:00,ETH,0.00014050756962881667,return_1h_ahead,hourly_ridge_coldstart_v1
