@@ -1859,6 +1859,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-09 07:00:00+00:00,BNB,-0.0001567786426692,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 09:00:00+00:00,BNB,4.7713464402813225e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 10:00:00+00:00,BNB,-2.088877283142255e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-09 11:00:00+00:00,BNB,0.0002626431162869929,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -3718,7 +3719,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-09 05:00:00+00:00,BTC,4.302308788328512e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 07:00:00+00:00,BTC,9.665428485441576e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 09:00:00+00:00,BTC,0.0002329878104556,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-09 10:00:00+00:00,BTC,0.000318922301921428,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-09 10:00:00+00:00,BTC,0.0003189223019214,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-09 11:00:00+00:00,BTC,0.0002276678435837183,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -5579,3 +5581,4 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-09 07:00:00+00:00,ETH,-0.0002951323517058,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 09:00:00+00:00,ETH,-9.48916968516242e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-09 10:00:00+00:00,ETH,4.178792330082712e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-09 11:00:00+00:00,ETH,-0.00035913672482127415,return_1h_ahead,hourly_ridge_coldstart_v1
