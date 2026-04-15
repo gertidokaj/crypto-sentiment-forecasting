@@ -1951,7 +1951,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-15 02:00:00+00:00,BNB,8.004482806035491e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 05:00:00+00:00,BNB,-1.057180934823114e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 07:00:00+00:00,BNB,-0.0001832765346818,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-15 09:00:00+00:00,BNB,-1.4196809095653551e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-15 09:00:00+00:00,BNB,-1.4196809095653553e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-15 11:00:00+00:00,BNB,-0.00011917071717225397,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -3905,6 +3906,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-15 05:00:00+00:00,BTC,0.0003165828518383,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 07:00:00+00:00,BTC,-0.0001931262649718,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 09:00:00+00:00,BTC,-5.506480618338146e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-15 11:00:00+00:00,BTC,-0.00026329333581801825,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -5858,3 +5860,4 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-15 05:00:00+00:00,ETH,0.0001621897345997,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 07:00:00+00:00,ETH,-0.0001920361428719,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-15 09:00:00+00:00,ETH,9.920655208088157e-06,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-15 11:00:00+00:00,ETH,-0.0001282577753281714,return_1h_ahead,hourly_ridge_coldstart_v1
