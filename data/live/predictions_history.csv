@@ -2063,6 +2063,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-22 21:00:00+00:00,BNB,-0.0004774620033176,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 22:00:00+00:00,BNB,-0.0005357059341341,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 23:00:00+00:00,BNB,-4.223090272261078e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-23 02:00:00+00:00,BNB,0.00019964448901388913,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -4127,6 +4128,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-22 21:00:00+00:00,BTC,-1.951537346258676e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 22:00:00+00:00,BTC,-0.0003026866406283,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 23:00:00+00:00,BTC,-8.89659889844488e-06,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-23 02:00:00+00:00,BTC,2.220391554777593e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -6190,4 +6192,5 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-04-22 20:00:00+00:00,ETH,-0.0002471102873581,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 21:00:00+00:00,ETH,-0.0001756196350446,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-04-22 22:00:00+00:00,ETH,-0.0001433746566937,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-04-22 23:00:00+00:00,ETH,-0.0005121276654960242,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-22 23:00:00+00:00,ETH,-0.000512127665496,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-04-23 02:00:00+00:00,ETH,-0.000787203573171018,return_1h_ahead,hourly_ridge_coldstart_v1
