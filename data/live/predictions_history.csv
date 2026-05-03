@@ -2202,7 +2202,8 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-05-03 06:00:00+00:00,BNB,0.0002987352465634,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 08:00:00+00:00,BNB,0.0002832480414987,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 10:00:00+00:00,BNB,0.0003125207634975,return_1h_ahead,hourly_ridge_coldstart_v1
-2026-05-03 11:00:00+00:00,BNB,0.0003320679744257256,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-05-03 11:00:00+00:00,BNB,0.0003320679744257,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-05-03 13:00:00+00:00,BNB,0.0003240329809980467,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,BTC,0.0005947083592517,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,BTC,0.0006548413108133,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,BTC,0.0006503622250802,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -4407,6 +4408,7 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-05-03 08:00:00+00:00,BTC,-9.55822130410024e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 10:00:00+00:00,BTC,4.966536433115935e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 11:00:00+00:00,BTC,6.763585114790392e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-05-03 13:00:00+00:00,BTC,7.527405029126433e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 16:00:00+00:00,ETH,0.0005084652317259,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 17:00:00+00:00,ETH,0.0006071566277189,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-01-03 18:00:00+00:00,ETH,0.0005793905387516,return_1h_ahead,hourly_ridge_coldstart_v1
@@ -6611,3 +6613,4 @@ ts_utc,crypto,yhat,yhat_type,model_name
 2026-05-03 08:00:00+00:00,ETH,-0.0004189889482026,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 10:00:00+00:00,ETH,4.296066941754113e-05,return_1h_ahead,hourly_ridge_coldstart_v1
 2026-05-03 11:00:00+00:00,ETH,9.155844696698065e-05,return_1h_ahead,hourly_ridge_coldstart_v1
+2026-05-03 13:00:00+00:00,ETH,0.00010004440241745288,return_1h_ahead,hourly_ridge_coldstart_v1
